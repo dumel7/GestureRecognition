@@ -12,7 +12,7 @@ import torch.nn as nn
 import numpy as np
 from data_loader import VideoFolder
 from callbacks import PlotLearning, MonitorLRDecay, AverageMeter
-from modelCNNLSTM import MyNetwork
+from model import MyNetwork
 from torchvision.transforms import *
 
 str2bool = lambda x: (str(x).lower() == 'true')
@@ -70,6 +70,7 @@ def main():
             shutil.rmtree(save_dir)
         print('You pressed Ctrl+C!')
         sys.exit(0)
+
     # assign Ctrl+C signal handler
     signal.signal(signal.SIGINT, signal_handler)
 
@@ -238,7 +239,14 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                   'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                   'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                      epoch, i, len(train_loader), loss=losses, top1=top1, top5=top5))
+                epoch, i, len(train_loader), loss=losses, top1=top1, top5=top5))
+            file = open(config["output_dir"] + "results.txt", "a")
+            file.write('Epoch: [{0}][{1}/{2}]\t'
+                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                       'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
+                       'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
+                epoch, i, len(train_loader), loss=losses, top1=top1, top5=top5))
+            file.close()
     return losses.avg, top1.avg, top5.avg
 
 
@@ -277,10 +285,20 @@ def validate(val_loader, model, criterion, class_to_idx=None):
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                       'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                       'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                          i, len(val_loader), loss=losses, top1=top1, top5=top5))
-
+                    i, len(val_loader), loss=losses, top1=top1, top5=top5))
+                file = open(config["output_dir"] + "results.txt", "a")
+                file.write('Test: [{0}/{1}]\t'
+                           'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                           'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
+                           'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
+                    i, len(val_loader), loss=losses, top1=top1, top5=top5))
+                file.close()
         print(' * Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'
               .format(top1=top1, top5=top5))
+        file = open(config["output_dir"] + "results.txt", "a")
+        file.write(' * Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'
+                   .format(top1=top1, top5=top5))
+        file.close()
 
         if args.eval_only:
             logits_matrix = np.concatenate(logits_matrix)
